@@ -1,82 +1,280 @@
 <template>
-  <div class="tree">
+	<div class="tree" @mousemove="mousemoveEvent">
 		<div id="box" :style="boxStyle">
-			<div class="move">
-				<div id="bg" >
-					<img :style="boxStyle" src="./img/tree/tree-3200x786.png"/>
+			<div class="move" :style="moveStyle">
+				<div id="bg">
+					<img id="img_bg" :style="boxStyle" src="./img/tree/tree-3200x786.png" />
 				</div>
-				<div id="svg" >
-						<embed id="tree-bg" :src="src" width="100%" height="100%"></embed>
+				<div id="svg">
+					<embed id="tree_bg" :src="src" :style="boxStyle"></embed>
 				</div>
 			</div>
-			<div class="logo"></div>
+			<div class="logo">
+				<img :style="imgStyle" src="./img/tree/tree-logo.png" />
+			</div>
 		</div>
-  </div>
+	</div>
 </template>
-
 <script>
-import svg from './img/tree/tree-yz-3200x786.svg'
-//var width = window.innerWidth;
-var height = window.innerHeight-80;
-//var svgBox = document.querySelector('#box');
-//svgBox.style.width = width + 'px';
-//svgBox.style.height = height + 'px';
-window.addEventListener('resize',function(){
-	height = window.innerHeight-80;
-	console.log(height)
-});
+	import svg from './img/tree/tree-yz-3200x786.svg';
+require('./lib/TweenMax.min.js');
+//var TweenMax = new tm();
 
-export default {
-  name: 'tree',
-  data () {
-    return {
-      src: svg,
-      mes: height,
-      boxStyle:{
-//    	width: width+'px',
-      	height: height+'px'
-      }
-    }
-  }
+console.log(require('./lib/TweenMax.min.js'));
+
+var hdArr1;
+	var sucai1Arr;
+	//var width = window.innerWidth;
+	var height = window.innerHeight - 80;
+	if(height < 568) {
+		height = 568;
+	}
+	let img_w = 3200;
+	//svgBox.style.width = width + 'px';
+	//svgBox.style.height = height + 'px';
+
+	function initSucai(name1, name2, count, origin, svg) {
+		var arr = [];
+		for(var i = 0; i < count; i++) {
+			arr.push(new SucaiObj(name1, name2, i, origin, svg));
+		}
+		return arr;
+	};
+
+	function SucaiObj(name1, name2, index, origin, svg) {
+		this.el = svg.getElementById(name1 + index);
+		this.el2 = svg.getElementById(name2 + index);
+		this.x;
+		this.y;
+		this.opacity = 0.9;
+		this.scale = 0;
+		this.transformOrigin = origin[index];
+		this.isFall = false;
+		this.isGrow = false;
+		this.isShake = false;
+
+		SucaiObj.prototype.init = function() {
+			TweenMax.set([this.el, this.el2], {
+				opacity: this.opacity,
+				scale: this.scale,
+				transformOrigin: this.transformOrigin
+			});
+		}
+		SucaiObj.prototype.grow = function(growTime, delayTime, scale, startAt) {
+			this.isGrow = true;
+			TweenMax.to([this.el, this.el2], growTime || 10, {
+				scale: scale || 1,
+				ease: Linear.easeNone,
+				delay: delayTime || 2,
+				startAt: startAt,
+				onComplete: function(me) {
+					me.isGrow = false
+				},
+				onCompleteParams: [this]
+			});
+		}
+		SucaiObj.prototype.shake = function() {
+			if(!this.isFall && !this.isGrow && !this.isShake) {
+				this.isShake = true;
+				new TimelineMax().to([this.el, this.el2], 0.2, {
+						rotation: 10
+					})
+					.to([this.el, this.el2], 10, {
+						rotation: 0,
+						ease: Elastic.easeOut.config(3, 0.1),
+						onComplete: function(me) {
+							me.isShake = false;
+							if(Math.random() > 0.8) {
+								me.fall();
+							}
+						},
+						onCompleteParams: [this]
+
+					})
+			}
+		}
+		SucaiObj.prototype.fall = function() {
+			if(this.isGrow || this.isFall) {
+				return
+			};
+
+			this.isFall = true;
+			var temp = [-1, 1];
+			var t = new TimelineMax({
+				onComplete: this.reGrow,
+				onCompleteParams: [this]
+			});
+			t.to([this.el, this.el2], 10, {
+					y: height + 200,
+				})
+				.to([this.el, this.el2], 15, {
+					x: randomInRange(10, 20) * temp[Math.round(Math.random())],
+					ease: Elastic.easeOut.config(3, 0.1)
+				}, "-=9.8")
+				.to([this.el, this.el2], 6, {
+					rotation: randomInRange(60, 180),
+				}, "-=15")
+		}
+
+		SucaiObj.prototype.reGrow = function(obj) {
+			obj.isFall = false;
+			obj.grow(randomInRange(5, 10), randomInRange(1, 5), 1, {
+				x: 0,
+				y: 0,
+				rotation: 0,
+				scale: 0
+			});
+		}
+	}
+
+	function randomInRange(min, max) {
+		return Math.round(Math.random() * (max - min + 1)) + min;
+	}
+
+	export default {
+		name: 'tree',
+		data() {
+			return {
+				src: svg,
+				left: 0,
+				img_w: img_w,
+				h: height,
+				moveStyle: {
+					width: img_w + 'px',
+					left: 0 + 'px'
+				},
+				boxStyle: {
+					height: height + 'px'
+				},
+				imgStyle: {
+					width: 25 + '%',
+				}
+			}
+		},
+		mounted: function() {
+			let me = this;
+			let img_bg = document.getElementById('img_bg');
+			me.img_w = img_bg.clientWidth;
+			//	var embed = document.querySelector('#tree-bg');
+			window.addEventListener('resize', function() {
+				me.h = window.innerHeight - 80;
+				me.img_w = img_bg.clientWidth;
+
+				//			console.log(me.img_w)
+			});
+			let svgBox = document.querySelector('#box');
+			svgBox.addEventListener('mousedown', function(e) {
+				e.preventDefault();
+			});
+
+			let embed = document.querySelector('#tree_bg');
+			window.onload = function() {
+
+				setInterval(function() {
+					me.left -= 1.1;
+					if(me.left < -me.img_w / 2) {
+						me.left = 0;
+					}
+				}, 60 / 1000);
+
+//				var yzOrigin = ["10% 100%", "100% 90%", "100% 100%", "100% 90%", "0% 100%", "100% 100%", "100% 90%", "0% 100%", "100% 100%"];
+//				var hdOringin = ["50% 50%", "50% 50%"];
+//
+//				let embed = document.querySelector('#tree_bg');
+//				let svg_yz = embed.getSVGDocument().querySelector('#svg');
+//
+//				hdArr1 = initSucai('hd1_', 'hd2_', 1, hdOringin, svg_yz);
+//				sucai1Arr = initSucai('yz1_', 'yz2_', 9, yzOrigin, svg_yz);
+//
+//				sucai1Arr.forEach(function(yz) {
+//					yz.init();
+//					yz.grow(randomInRange(5, 20), randomInRange(1, 5));
+//				});
+//				hdArr1.forEach(function(hd) {
+//					hd.init();
+//					hd.grow(0.1, 0.1);
+//				});
+
+			}
+
+		},
+		watch: {
+			left: function() {
+				this.moveStyle.left = this.left + 'px';
+			},
+			img_w: function() {
+				this.moveStyle.width = this.img_w + 'px';
+				// 		let embed = document.querySelector('#tree_bg');
+				// 		let svg_yz = embed.getSVGDocument().querySelector('#svg');
+				// 		svg_yz.setAttribute('viewBox','0 0 '+ this.img_w + ' ' + this.h);
+
+			},
+			h: function(newVal, oldVal) {
+				if(newVal >= 568) {
+					this.boxStyle.height = this.h + 'px';
+
+				} else {
+					this.h = 568;
+					this.boxStyle.height = this.h + 'px';
+				}
+			}
+		},
+		methods: {
+			mousemoveEvent: function(e) {
+				if(Math.random() > 0.8) {
+					sucai1Arr.forEach(function(sucai) {
+						sucai.shake();
+					});
+				}
+			}
+
+		}
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.tree{
-	width: 100%;
-	/*overflow: hidden;*/
-	/*position: relative;*/
-	background-color: rosybrown;
-}
-
-			#box{
-				position: relative;
-				width: 100%;
-				overflow: hidden;
-				background-color: aquamarine;
-			}
-			
-			.move{
-				position: absolute;
-				height: 100%;
-			}
-			.logo{
-				position: absolute;
-				width: 100%;
-				height: 100%;
-				z-index: 999;
-				background-image: url(./img/tree/tree-logo.png);
+	.tree {
+		width: 100%;
+		/*overflow: hidden;*/
+		/*position: relative;*/
+		background-color: black;
+	}
+	
+	#box {
+		position: relative;
+		width: 100%;
+		overflow: hidden;
+		background-color: red;
+	}
+	
+	.move {
+		position: absolute;
+		height: 100%;
+	}
+	
+	.logo {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		/*align-content: center;*/
+		width: 100%;
+		height: 100%;
+		z-index: 999;
+		/*background-image: url(./img/tree/tree-logo.png);
 				background-position: center;	
 				background-size: 25% 35%;
-				background-repeat: no-repeat;
-				/*background-color: red;*/
-			}
-			#bg{
-				position: absolute;
-				
-			}
-			#svg{
-				position: absolute;
-			}
+				background-repeat: no-repeat;*/
+		/*background-color: red;*/
+	}
+	
+	#bg {
+		position: absolute;
+	}
+	
+	#svg {
+		position: absolute;
+		/*background-color: royalblue;*/
+	}
 </style>

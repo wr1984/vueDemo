@@ -22,17 +22,25 @@
     <router-view></router-view>
   </div>
 </template>
-
 <script>
+//import tm from './components/common/lib/TweenMax.min.js';
+//console.log(TweenMax)
 export default {
   name: 'app'
 }
 </script>
 
 <style>
+body::-webkit-scrollbar{
+  display:none;
+}
 html,body{
 	margin: 0;
 	padding: 0;
+	height: 100%;
+	/*overflow-y:-Scroll;*/
+	/*overflow-y:hidden;*/
+	/*overflow-y: hidden;*/
 }
 #app {
 	box-sizing: border-box;
