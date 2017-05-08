@@ -1,12 +1,13 @@
 <template>
-	<div class="tree" @mousemove="mousemoveEvent">
+	<!--@mousemove="mousemoveEvent"--> 
+	<div class="tree" @mousedown="mousedownEvent">
 		<div id="box" :style="boxStyle">
 			<div class="move" :style="moveStyle">
 				<div id="bg">
 					<img id="img_bg" :style="boxStyle" src="./img/tree/tree-3200x786.png" />
 				</div>
 				<div id="svg">
-					<embed id="tree_bg" :src="src" :style="boxStyle"></embed>
+					<embed id="tree_bg" :src="src" ></embed>
 				</div>
 			</div>
 			<div class="logo">
@@ -29,7 +30,7 @@ var hdArr1;
 	if(height < 568) {
 		height = 568;
 	}
-	let img_w = 3200;
+//	let img_w;
 	//svgBox.style.width = width + 'px';
 	//svgBox.style.height = height + 'px';
 
@@ -136,11 +137,11 @@ var hdArr1;
 		data() {
 			return {
 				src: svg,
-				left: 0,
-				img_w: img_w,
+				l: 0,
+				img_w: 3200,
 				h: height,
 				moveStyle: {
-					width: img_w + 'px',
+					width: this.img_w + 'px',
 					left: 0 + 'px'
 				},
 				boxStyle: {
@@ -151,32 +152,36 @@ var hdArr1;
 				}
 			}
 		},
+//		beforeUpdate:function(){
+//			let img_bg = document.getElementById('img_bg');
+//			this.img_w = img_bg.offsetWidth;
+//		},
+//		updated:function(){
+//			this.l -= 1;
+//			if(this.l <= -this.img_w/2){
+//				this.l = 0;
+//			}
+//		},
 		mounted: function() {
 			let me = this;
 			let img_bg = document.getElementById('img_bg');
-			me.img_w = img_bg.clientWidth;
+			me.img_w = img_bg.offsetWidth;
 			//	var embed = document.querySelector('#tree-bg');
 			window.addEventListener('resize', function() {
 				me.h = window.innerHeight - 80;
-				me.img_w = img_bg.clientWidth;
-
+				me.img_w = img_bg.offsetWidth;
 				//			console.log(me.img_w)
 			});
-			let svgBox = document.querySelector('#box');
-			svgBox.addEventListener('mousedown', function(e) {
-				e.preventDefault();
-			});
-
-			let embed = document.querySelector('#tree_bg');
-			window.onload = function() {
-
+//			let embed = document.querySelector('#tree_bg');
+//			window.onload = function() {
+////
 				setInterval(function() {
-					me.left -= 1.1;
-					if(me.left < -me.img_w / 2) {
-						me.left = 0;
+					me.l -= 1;
+					if(me.l < -me.img_w / 2) {
+						me.l = 0;
 					}
 				}, 60 / 1000);
-
+//			}
 //				var yzOrigin = ["10% 100%", "100% 90%", "100% 100%", "100% 90%", "0% 100%", "100% 100%", "100% 90%", "0% 100%", "100% 100%"];
 //				var hdOringin = ["50% 50%", "50% 50%"];
 //
@@ -195,15 +200,16 @@ var hdArr1;
 //					hd.grow(0.1, 0.1);
 //				});
 
-			}
+//			}
 
 		},
 		watch: {
-			left: function() {
-				this.moveStyle.left = this.left + 'px';
+			l: function() {
+				this.moveStyle.left = this.l + 'px';
 			},
 			img_w: function() {
 				this.moveStyle.width = this.img_w + 'px';
+				console.log('ds')
 				// 		let embed = document.querySelector('#tree_bg');
 				// 		let svg_yz = embed.getSVGDocument().querySelector('#svg');
 				// 		svg_yz.setAttribute('viewBox','0 0 '+ this.img_w + ' ' + this.h);
@@ -226,6 +232,9 @@ var hdArr1;
 						sucai.shake();
 					});
 				}
+			},
+			mousedownEvent: function(e){
+				e.preventDefault();
 			}
 
 		}
@@ -251,6 +260,7 @@ var hdArr1;
 	.move {
 		position: absolute;
 		height: 100%;
+		overflow: hidden;
 	}
 	
 	.logo {
@@ -271,10 +281,14 @@ var hdArr1;
 	
 	#bg {
 		position: absolute;
+		height: 100%;
+		width: 100%;
 	}
 	
 	#svg {
 		position: absolute;
+		height: 100%;
+		width: 100%;
 		/*background-color: royalblue;*/
 	}
 </style>
